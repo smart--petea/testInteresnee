@@ -1,0 +1,77 @@
+function ListCollectionView(collection, attr) {
+	View.call(this, attr);
+	this.collection = collection;
+	this.sortPriceDesc = false;
+	this.filterName = "";
+	this.filterPriceGt = -1;
+	this.filterPriceLt = -1;
+
+	this.$el.append("<tr><td colspan='3'style='text-align: center;'><input name='sortByPrice' type='checkbox' checked> Ascendent by price</input></td></tr>");
+	this.$el.append("<tr colspan='3'><td>Filter by name:</td><td><input class='filter' id='byName' type='text'/></td></tr>");
+	this.$el.append("<tr colspan='3'><td>Price more than:</td><td><input class='filter' id='byPriceGt' type='text'/></td></tr>");
+	this.$el.append("<tr colspan='3'><td>Price less than:</td><td><input class='filter' id='byPriceLt' type='text'/></td></tr>");
+	this.$el.append("<tbody id='content'></tbody>");
+
+	this.attr = attr;
+	this.$tbody = $('tbody#content', this.$el);
+
+	var wCollection = collection.clone();
+	this.sortPrice(wCollection);
+
+	this.tAttr = _.extend(this.attr, {$el: this.$tbody});
+	this.tbody = new CollectionView(wCollection, this.tAttr);
+
+	var that = this;
+	$('[name=sortByPrice]', this.$el).click(function() {
+		that.sortPriceDesc = !$(this).prop('checked');
+		that.refresh();
+	});
+
+	$('.filter#byName', this.$el).keyup(function() {
+		that.filterName = $(this).val();
+		that.refresh();
+	});
+
+	$('.filter#byPriceGt', this.$el).keyup(function() {
+		var val = $.trim($(this).val());
+		that.filterPriceGt = val.length === 0 ? -1 : +$(this).val();
+		that.refresh();
+	});
+
+	$('.filter#byPriceLt', this.$el).keyup(function() {
+		var val = $.trim($(this).val());
+		that.filterPriceLt = val.length === 0 ? -1 : +$(this).val();
+		that.refresh();
+	});
+}
+
+
+_.extend(ListCollectionView.prototype, CollectionView.prototype); 
+_.extend(ListCollectionView.prototype, {
+	sortPrice: function(collection, desc) {
+			   desc = desc || false;
+			     collection.sort(function(model) {
+				     return (+desc === 0 ? 1 : -1) * model.attr('price');
+			     });
+		     },
+
+	refresh: function() {
+			 var that = this;
+			 var collection = that.collection.clone();
+			 collection = collection.filter(function(model) {
+
+				var targ = $.trim(that.filterName).toLowerCase();
+				var name = model.attr('name').toLowerCase();
+				var namePredicat = name.indexOf(targ) >= 0;
+				var price = +model.attr('price');
+				var lessPredicat = (that.filterPriceLt < 0) || price <= that.filterPriceLt;
+				var morePredicat = (that.filterPriceGt < 0) || price >= that.filterPriceGt;
+
+				return namePredicat && lessPredicat && morePredicat;
+			 });
+			that.sortPrice(collection, that.sortPriceDesc);	
+
+			that.$tbody.empty();
+			that.tbody = new CollectionView(collection, that.tAttr);
+		 },
+});

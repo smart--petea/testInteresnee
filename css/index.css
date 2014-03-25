@@ -1,0 +1,18 @@
+
+#tabView, #listView {
+	border-collapse: collapse;
+}
+
+#tabView tr {
+	border-bottom: 1px solid #e1e1e1;
+	line-height: 25px;
+}
+
+#tabView tr.model:hover {
+	background-color: #f1f1f1;
+	cursor: pointer;
+}
+
+#tabView #tyleView img {
+	width: 50;
+}
